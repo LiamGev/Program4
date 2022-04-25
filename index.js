@@ -22,16 +22,16 @@ app.get('/', (req, res) => {
     });
 });
 
-app.post('/api/meal', (req,res,next) =>{
-    let meal = req.body;
-    console.log(meal);
+app.post('/api/user', (req,res,next) =>{
+    let user = req.body;
+    console.log(user);
     id++;
-    meal={
+    user={
         id,
-        ...meal,
+        ...user,
     };
     
-    database.push(meal);
+    database.push(user);
     console.log(database);
     res.status(201).json({
         status: 201,
@@ -39,29 +39,70 @@ app.post('/api/meal', (req,res,next) =>{
     })
 });
 
-app.get('/api/meal', (req,res)=>{
+app.get('/api/user', (req,res)=>{
     res.status(200).json({
         status: 200,
         result: database
     })
 })
 
-app.get('/api/meal/:mealId',(req,res)=>{
-    const mealId = req.params.mealId
-    let meal = database.filter((item) => item.id==mealId);
-    if(meal.length>0){
-        console.log(meal);
+app.get('/api/user/:userId',(req,res)=>{
+    const userId = req.params.userId
+    let user = database.filter((item) => item.id==userId);
+    if(user.length>0){
+        console.log(user);
         res.status(200).json({
             status: 200,
-            result: meal,
+            result: user,
         })
     } else{
         res.status(404).json({
             status: 404,
-            result: `Movie with ID ${mealId} not found`,
+            result: `User with ID ${userId} not found`,
         })
     }
 });
+
+app.put("/api/user/:userId", (req, res) => {
+    const userId = req.params.userId;
+    let user = database.filter((item) => item.id == userId);
+    if (user.length > 0) {
+        let user2 = req.body;
+      const targetIndex = database.findIndex(f=>f.id == userId)
+      database[targetIndex] = user = {
+        userId,
+        ...user2,
+        };
+      console.log(user);
+      res.status(200).json({
+        status: 200,
+        result: user,
+      });
+    } else {
+      res.status(401).json({
+        status: 401,
+        result: `user with ID ${userId} not found`,
+      });
+    }
+});
+  
+  app.delete("/api/user/:userId", (req, res) => {
+    const userId = req.params.userId;
+    let user = database.filter((item) => item.id == userId)
+    if(user.length > 0){
+      const targetIndex = database.findIndex(f=>f.id == userId)
+      delete database[userId]
+      res.status(200).json({
+        status: 200,
+        result: "ID deleted"
+      })
+    } else {
+      res.status(401).json({
+        status: 401,
+        result: `user with ID ${userId} not found`,
+      })
+    }
+  })
 
 app.all('*', (req, res) => {
     res.status(404).json({
