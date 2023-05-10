@@ -1,117 +1,61 @@
+require('dotenv').config();
 const express = require('express');
 const { restart } = require('nodemon');
 const app = express();
 const port = process.env.PORT || 3000;
+const dbConnection = require("./database/dbConnection");
 const bodyParser = require('body-parser');
+const userRouter = require('./src/routes/user-routes');
+const mealRouter = require('./src/routes/meal-routes')
+const authRouter = require('./src/routes/authentication.routes')
+const logger = require("./src/config/config").logger;
+
 
 app.use(bodyParser.json());
 
-let database = [];
-let id = 0;
+app.use('/api', userRouter, mealRouter, authRouter)
 
-app.all('*',(req, res, next) =>{
-    const method = req.method;
-    console.log(`Method ${method} aangeroepen`);
-    next();
-})
-
-app.get('/', (req, res) => {
-    res.status(200).json({
-        status: 200,
-        result: 'Hello World!',
-    });
+//Log all requests
+app.all('*', (req, res, next) => {
+	const method = req.method;
+	logger.debug(`Method ${method} is aangeroepen`);
+	next();
 });
 
-app.post('/api/user', (req,res,next) =>{
-    let user = req.body;
-    console.log(user);
-    id++;
-    user={
-        id,
-        ...user,
-    };
-    
-    database.push(user);
-    console.log(database);
-    res.status(201).json({
-        status: 201,
-        result : database,
-    })
-});
+//All valid routes
+app.use(userRouter);
+app.use(mealRouter);
+app.use(authRouter);
 
-app.get('/api/user', (req,res)=>{
-    res.status(200).json({
-        status: 200,
-        result: database
-    })
-})
-
-app.get('/api/user/:userId',(req,res)=>{
-    const userId = req.params.userId
-    let user = database.filter((item) => item.id==userId);
-    if(user.length>0){
-        console.log(user);
-        res.status(200).json({
-            status: 200,
-            result: user,
-        })
-    } else{
-        res.status(404).json({
-            status: 404,
-            result: `User with ID ${userId} not found`,
-        })
-    }
-});
-
-app.put("/api/user/:userId", (req, res) => {
-    const userId = req.params.userId;
-    let user = database.filter((item) => item.id == userId);
-    if (user.length > 0) {
-        let user2 = req.body;
-      const targetIndex = database.findIndex(f=>f.id == userId)
-      database[targetIndex] = user = {
-        userId,
-        ...user2,
-        };
-      console.log(user);
-      res.status(200).json({
-        status: 200,
-        result: user,
-      });
-    } else {
-      res.status(401).json({
-        status: 401,
-        result: `user with ID ${userId} not found`,
-      });
-    }
-});
-  
-  app.delete("/api/user/:userId", (req, res) => {
-    const userId = req.params.userId;
-    let user = database.filter((item) => item.id == userId)
-    if(user.length > 0){
-      const targetIndex = database.findIndex(f=>f.id == userId)
-      delete database[userId]
-      res.status(200).json({
-        status: 200,
-        result: "ID deleted"
-      })
-    } else {
-      res.status(401).json({
-        status: 401,
-        result: `user with ID ${userId} not found`,
-      })
-    }
-  })
-
+//All unvalid routes
 app.all('*', (req, res) => {
-    res.status(404).json({
-        status: 404,
-        result: 'End-point not found',
-    });
+	res.status(404).json({
+		status: 404,
+		result: 'End-point not found',
+	});
 });
 
-app.listen(port, () => {
-    console.log(`Example app listening on port ${port}`)
+//Error Handling
+app.use((err, req, res, next) => {
+	logger.debug('Error handler called.');
+	res.status(err.status).json(err);
 });
+
+//Start server
+app.listen(port, () => {
+	logger.debug(`Example app listening on port ${port}`);
+});
+
+//SIGN IN
+process.on('SIGINT', () => {
+	logger.debug('SIGINT signal received: closing HTTP server');
+	dbConnection.end((err) => {
+		logger.debug('Database connection closed');
+	});
+	app.close(() => {
+		logger.debug('HTTP server closed');
+	});
+});
+
+module.exports = app;
 
