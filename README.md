@@ -1,7 +1,9 @@
 # Share a meal Programmeren 4
 
-# endpoints for this API
+# Endpoints for this API
   This API is hosted on Railway.
+  This API uses an online database with users that can add meals to the database. The API uses JWT authentications on most of the endpoints available.
+  
   
   # Login Endpoints
     https://deafening-position-production.up.railway.app/api/auth/login
