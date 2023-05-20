@@ -8,7 +8,7 @@
     "dev": "nodemon index.js",
     "test": "mocha test/**/*.test.js --exit"
   },
-  "author": "",
+  "author": "Liam",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.0",
