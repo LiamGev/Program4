@@ -223,12 +223,11 @@ let controller = {
             userId,
           ],
           function (error, result, fields) {
-            if (error) {
+            if(error){
               res.status(401).json({
                 status: 401,
                 message: `Email ${user.emailAdress} has already been taken!`,
               });
-              return;
             }
             if (result.affectedRows > 0) {
               connection.query(
